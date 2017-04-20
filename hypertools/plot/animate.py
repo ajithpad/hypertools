@@ -11,7 +11,7 @@ from .._shared.helpers import *
 from ..tools.reduce import reduce as reduceD
 
 ##MAIN FUNCTION##
-def animated_plot(x, *args, **kwargs):
+def animated_plot(x, animate, *args, **kwargs):
     """
     Implements animated trajectory plot
 
@@ -116,10 +116,10 @@ def animated_plot(x, *args, **kwargs):
                 np.asarray(cube[side][1])*scale*const,
                 np.asarray(cube[side][2])*scale*const
                 )
-            plane_list.append(ax.plot_wireframe(Xs, Ys, Zs, rstride=1, cstride=1, color='black', linewidth=2))
+            plane_list.append(ax.plot_wireframe(Xs, Ys, Zs, rstride=1, cstride=1, color='black', linewidth=1))
         return plane_list
 
-    def update_lines(num, data_lines, lines, trail_lines, cube_scale, tail_duration):
+    def update_lines(num, data_lines, lines, trail_lines, cube_scale, tail_duration, animate):
 
         if hasattr(update_lines, 'planes'):
             for plane in update_lines.planes:
@@ -129,17 +129,34 @@ def animated_plot(x, *args, **kwargs):
         ax.view_init(elev=10, azim=rotations*(360*(num/data_lines[0].shape[0])))
         ax.dist=8-zoom
 
-        for line, data, trail in zip(lines, data_lines, trail_lines):
-            if num<=tail_duration:
-                    line.set_data(data[0:num+1, 0:2].T)
-                    line.set_3d_properties(data[0:num+1, 2])
-            else:
-                line.set_data(data[num-tail_duration:num+1, 0:2].T)
-                line.set_3d_properties(data[num-tail_duration:num+1, 2])
-            if chemtrails:
-                trail.set_data(data[0:num + 1, 0:2].T)
-                trail.set_3d_properties(data[0:num + 1, 2])
-        return lines,trail_lines
+        if animate is 'trajectory':
+            for line, data, trail in zip(lines, data_lines, trail_lines):
+                if num<=tail_duration:
+                        line.set_data(data[0:num+1, 0:2].T)
+                        line.set_3d_properties(data[0:num+1, 2])
+                else:
+                    line.set_data(data[num-tail_duration:num+1, 0:2].T)
+                    line.set_3d_properties(data[num-tail_duration:num+1, 2])
+                if chemtrails:
+                    trail.set_data(data[0:num + 1, 0:2].T)
+                    trail.set_3d_properties(data[0:num + 1, 2])
+            return lines,trail_lines
+        elif animate is 'rotate':
+            for line, data in zip(lines, data_lines):
+                    line.set_data(data[:, 0:2].T)
+                    line.set_3d_properties(data[:, 2])
+            return lines,trail_lines
+        elif animate is 'bullettime':
+            for line, data, trail in zip(lines, data_lines, trail_lines):
+                trail.set_data(data[:, 0:2].T)
+                trail.set_3d_properties(data[:, 2])
+                if num<=tail_duration:
+                        line.set_data(data[0:num+1, 0:2].T)
+                        line.set_3d_properties(data[0:num+1, 2])
+                else:
+                    line.set_data(data[num-tail_duration:num+1, 0:2].T)
+                    line.set_3d_properties(data[num-tail_duration:num+1, 2])
+            return lines,trail_lines
 
     args_list = parse_args(x,args)
     kwargs_list = parse_kwargs(x,kwargs)
@@ -161,9 +178,9 @@ def animated_plot(x, *args, **kwargs):
     else:
         tail_duration = int(frame_rate*tail_duration)
 
-    lines = [ax.plot(dat[0, 0:1], dat[1, 0:1], dat[2, 0:1], linewidth=3, *args_list[idx], **kwargs_list[idx])[0] for idx,dat in enumerate(x)]
+    lines = [ax.plot(dat[0, 0:1], dat[1, 0:1], dat[2, 0:1], linewidth=2, *args_list[idx], **kwargs_list[idx])[0] for idx,dat in enumerate(x)]
     trail = [
-        ax.plot(dat[0, 0:1], dat[1, 0:1], dat[2, 0:1], alpha=.3, linewidth=3, *args_list[idx], **kwargs_list[idx])[0]
+        ax.plot(dat[0, 0:1], dat[1, 0:1], dat[2, 0:1], alpha=.3, linewidth=2, *args_list[idx], **kwargs_list[idx])[0]
         for idx, dat in enumerate(x)]
 
     ax.set_axis_off()
@@ -182,7 +199,7 @@ def animated_plot(x, *args, **kwargs):
         ax.legend(proxies,legend_data)
 
     # Creating the Animation object
-    line_ani = animation.FuncAnimation(fig, update_lines, x[0].shape[0], fargs=(x, lines, trail, cube_scale, tail_duration),
+    line_ani = animation.FuncAnimation(fig, update_lines, x[0].shape[0], fargs=(x, lines, trail, cube_scale, tail_duration, animate),
                                    interval=1000/frame_rate, blit=False, repeat=False)
     if save:
         Writer = animation.writers['ffmpeg']

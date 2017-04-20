@@ -1,13 +1,24 @@
 #!/usr/bin/env python
 
-##PACKAGES##
+# built in packages
 from __future__ import division
+from builtins import zip
 import sys
 import warnings
 import re
 import itertools
+
+# external code
+import matplotlib
+from matplotlib import pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.lines import Line2D
+import mpl_toolkits.mplot3d.axes3d as p3
 import seaborn as sns
 import pandas as pd
+import numpy as np
+
+# internal code
 from .._shared.helpers import *
 from .static import static_plot
 from .animate import animated_plot
@@ -15,10 +26,12 @@ from ..tools.cluster import cluster
 from ..tools.df2mat import df2mat
 from ..tools.reduce import reduce as reduceD
 from ..tools.normalize import normalize as normalizer
-from matplotlib.lines import Line2D
+from .plot_trajectory import plot_trajectory
+from .static_helpers import *
+from .animate_helpers import *
 
 ## MAIN FUNCTION ##
-def plot(x,*args,**kwargs):
+def plot(x, *args, **kwargs):
     """
     Plots dimensionality reduced data and parses plot arguments
 
@@ -27,7 +40,7 @@ def plot(x,*args,**kwargs):
     x : Numpy array, DataFrame or list of arrays/dfs
         Data for the plot. The form should be samples (rows) by features (cols).
 
-        color(s) (list): A list of colors for each line to be plotted.
+    color(s) (list): A list of colors for each line to be plotted.
         Can be named colors, RGB values (e.g. (.3, .4, .1)) or hex codes.
         If defined, overrides palette. See here for list of named colors.
         Note: must be the same length as X.
@@ -212,14 +225,138 @@ def plot(x,*args,**kwargs):
     if 'animate' in kwargs:
         animate=kwargs['animate']
         del kwargs['animate']
-
         # if animate mode, pass the color palette via kwargs so we can build a legend
         kwargs['color_palette']=palette
-
     else:
-        animate=False
+        animate='static'
 
-    if animate:
-        return animated_plot(x,*args,**kwargs)
+    if 'zoom' in kwargs:
+        zoom=kwargs['zoom']
+        del kwargs['zoom']
     else:
-        return static_plot(x,*args,**kwargs)
+        zoom=0
+
+    if 'chemtrails' in kwargs:
+        chemtrails= kwargs['chemtrails']
+        del kwargs['chemtrails']
+    else:
+        chemtrails=False
+
+    if 'rotations' in kwargs:
+        rotations=kwargs['rotations']
+        del kwargs['rotations']
+    else:
+        rotations=2
+
+    if 'duration' in kwargs:
+        duration=kwargs['duration']
+        del kwargs['duration']
+    else:
+        duration=30
+
+    if 'frame_rate' in kwargs:
+        frame_rate=kwargs['frame_rate']
+        del kwargs['frame_rate']
+    else:
+        frame_rate=50
+
+    if 'tail_duration' in kwargs:
+        tail_duration=kwargs['tail_duration']
+        del kwargs['tail_duration']
+    else:
+        tail_duration=2
+
+    if 'return_data' in kwargs:
+        return_data = kwargs['return_data']
+        del kwargs['return_data']
+    else:
+        return_data=False
+
+    if 'legend' in kwargs:
+
+        legend = kwargs['legend']
+        del kwargs['legend']
+    else:
+        legend=False
+
+    if 'color_palette' in kwargs:
+        palette = kwargs['color_palette']
+        del kwargs['color_palette']
+
+    if 'save_path' in kwargs:
+        save=True
+        save_path = kwargs['save_path']
+        del kwargs['save_path']
+    else:
+        save=False
+
+    # handle show flag
+    if 'show' in kwargs:
+        show=kwargs['show']
+        del kwargs['show']
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+    else:
+        show=True
+        import matplotlib.pyplot as plt
+
+    # handle labels flag
+	if 'labels' in kwargs:
+		labels=kwargs['labels']
+		del kwargs['labels']
+	else:
+		labels=False
+
+	# handle explore flag
+	if 'explore' in kwargs:
+		assert x[0].ndim>1, "Explore mode is currently only supported for 3D plots."
+		kwargs['picker']=True
+		del kwargs['explore']
+		explore=True
+	else:
+		explore=False
+
+    ##PARSE LEFTOVER MATPLOTLIB ARGS##
+    args_list = parse_args(x,args)
+
+    ##PARSE LEFTOVER MATPLOTLIB KWARGS##
+    kwargs_list = parse_kwargs(x,kwargs)
+
+    # scale and center the data
+    x = center(x)
+    x = scale(x)
+
+    # interpolate if line plot - NEED TO CHECK IF LINE
+    interp_val = frame_rate*duration/(x[0].shape[0] - 1)
+    x = interp_array_list(x, interp_val=interp_val)
+
+    # set axis style to cube
+    axis_style='cube'
+
+    # plot
+    if animate is 'static':
+        fig, ax, data = plot_static(x, args_list, kwargs_list)
+        ax.view_init(elev=10, azim=0)
+        ax.dist=8-zoom
+
+        if axis_style is 'cube':
+            ax.set_axis_off()
+            plot_cube(ax)
+
+        if labels:
+            add_labels(data,labels)
+    else:
+        fig, ax, data, ani = animated_plot(x, animate, *args, **kwargs)
+
+    if save:
+        Writer = animation.writers['ffmpeg']
+        writer = Writer(fps=frame_rate, bitrate=1800)
+        line_ani.save(save_path, writer=writer)
+
+    # add legend
+    if legend:
+        proxies = [plt.Rectangle((0, 0), 1, 1, fc=palette[idx]) for idx,label in enumerate(legend)]
+        ax.legend(proxies,legend)
+
+    if show:
+        plt.show()
