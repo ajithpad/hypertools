@@ -32,22 +32,29 @@ Check the [repo](https://github.com/ContextLab/hypertools-paper-notebooks) of Ju
 
 <h2>Installation</h2>
 
+These instructions assume you have [pip](https://pip.pypa.io/en/stable/installing/) installed on your system.  To install the latest stable version of this package type:
+
 `pip install hypertools`
 
-or
-
-To install from this repo:
+To install the latest (unstable) version from this repo, first clone the repository using `git`:
 
 `git clone https://github.com/ContextLab/hypertools.git`
 
-Then, navigate to the folder and type:
+Then navigate to the newly created hypertools folder and type:
 
-`pip install -e .`
+`pip install .`
 
-(this assumes you have [pip](https://pip.pypa.io/en/stable/installing/) installed on your system)
+Or, to force an upgrade to the latest version type (from within the hypertools folder):
+
+`git pull`
+
+followed by
+
+`pip install --upgrade .`
 
 <h2>Requirements</h2>
 
+This package's dependencies are:
 + python 2.7, 3.4+
 + PPCA>=0.0.2
 + scikit-learn>=0.18.1
@@ -57,10 +64,12 @@ Then, navigate to the folder and type:
 + scipy>=0.17.1
 + numpy>=1.10.4
 + future
++ requests
 + pytest (for development)
 + ffmpeg (for saving animations)
 
-If installing from github (instead of pip), you must also install the requirements:
+The dependencies should be installed automatically via `pip`.  To install them manually type:
+
 `pip install -r requirements.txt`
 
 <h2>Documentation</h2>
