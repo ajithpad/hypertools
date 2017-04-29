@@ -144,7 +144,7 @@ def parse_equivalent_args(**kwargs):
 	return kwargs
 
 def default_args(x, **kwargs):
-	kwargs = parse_equivalent_args(kwargs)
+	kwargs = parse_equivalent_args(**kwargs)
 
 	defaults = {'normalize': False,
 			'ndims': np.min([3, x[0].shape[1]]),

@@ -9,7 +9,8 @@ import itertools
 import seaborn as sns
 import pandas as pd
 from .._shared.helpers import *
-from .draw import draw
+from .static import static_plot
+from .animate import animated_plot
 from ..tools.cluster import cluster
 from ..tools.df2mat import df2mat
 from ..tools.reduce import reduce as reduceD
@@ -185,8 +186,8 @@ def plot(x,*args,**kwargs):
         if all([symbol not in args for symbol in Line2D.markers.keys()]):
             x = patch_lines(x)
     kwargs = remove_hyper_args(x, **kwargs)
-    
-    if kwargs['animate']
-        return animate(x, *args, **kwargs)
+
+    if kwargs['animate']:
+        return animated_plot(x, *args, **kwargs)
     else:
-        return static(x, *args, **kwargs)
+        return static_plot(x, *args, **kwargs)
