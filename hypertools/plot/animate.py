@@ -27,75 +27,12 @@ def animated_plot(x, *args, **kwargs):
     assert x[0].shape[1]>2, "Hypertools currently only supports animation for data with > 2 dims."
 
     ## HYPERTOOLS-SPECIFIC ARG PARSING ##
-
-    if 'zoom' in kwargs:
-        zoom=kwargs['zoom']
-        del kwargs['zoom']
-    else:
-        zoom=0
-
-    if 'chemtrails' in kwargs:
-        chemtrails= kwargs['chemtrails']
-        del kwargs['chemtrails']
-    else:
-        chemtrails=False
-
-    if 'rotations' in kwargs:
-        rotations=kwargs['rotations']
-        del kwargs['rotations']
-    else:
-        rotations=2
-
-    if 'duration' in kwargs:
-        duration=kwargs['duration']
-        del kwargs['duration']
-    else:
-        duration=30
-
-    if 'frame_rate' in kwargs:
-        frame_rate=kwargs['frame_rate']
-        del kwargs['frame_rate']
-    else:
-        frame_rate=50
-
-    if 'tail_duration' in kwargs:
-        tail_duration=kwargs['tail_duration']
-        del kwargs['tail_duration']
-    else:
-        tail_duration=2
-
-    if 'return_data' in kwargs:
-        return_data = kwargs['return_data']
-        del kwargs['return_data']
-    else:
-        return_data=False
-
-    if 'legend' in kwargs:
-        legend=True
-        legend_data = kwargs['legend']
-        del kwargs['legend']
-    else:
-        legend=False
-
-    if 'color_palette' in kwargs:
-        palette = kwargs['color_palette']
-        del kwargs['color_palette']
-
-    if 'save_path' in kwargs:
-        save=True
-        save_path = kwargs['save_path']
-        del kwargs['save_path']
-    else:
-        save=False
-
-    # handle show flag
-    if 'show' in kwargs:
-        show=kwargs['show']
-        del kwargs['show']
-        matplotlib.use('Agg')    
-    else:
-        show=True
-    import matplotlib.pyplot as plt
+    kwargs = default_args(x, **kwargs)
+    for k,v in kwargs.iteritems():
+        next = kwargs[k]
+        eval(k + ' = next')
+    import matplotlib.pyplot as plt #needs to happen after loading defaults
+    kwargs = remove_hyper_args(x, **kwargs)
 
     ##SUB FUNCTIONS##
     def plot_cube(scale, const=1):
@@ -119,7 +56,6 @@ def animated_plot(x, *args, **kwargs):
         return plane_list
 
     def update_lines(num, data_lines, lines, trail_lines, cube_scale, tail_duration):
-
         if hasattr(update_lines, 'planes'):
             for plane in update_lines.planes:
                 plane.remove()
@@ -140,8 +76,8 @@ def animated_plot(x, *args, **kwargs):
                 trail.set_3d_properties(data[0:num + 1, 2])
         return lines,trail_lines
 
-    args_list = parse_args(x,args)
-    kwargs_list = parse_kwargs(x,kwargs)
+    args_list = parse_args(x, args)
+    kwargs_list = parse_kwargs(x, kwargs)
 
     # Attaching 3D axis to the figure
     fig = plt.figure()
@@ -156,7 +92,7 @@ def animated_plot(x, *args, **kwargs):
     x = scale(x)
 
     if tail_duration==0:
-        tail_duration=1
+        tail_duration = 1
     else:
         tail_duration = int(frame_rate*tail_duration)
 

@@ -9,8 +9,7 @@ import itertools
 import seaborn as sns
 import pandas as pd
 from .._shared.helpers import *
-from .static import static_plot
-from .animate import animated_plot
+from .draw import draw
 from ..tools.cluster import cluster
 from ..tools.df2mat import df2mat
 from ..tools.reduce import reduce as reduceD
@@ -128,23 +127,14 @@ def plot(x,*args,**kwargs):
     x = format_data(x)
 
     ## HYPERTOOLS-SPECIFIC ARG PARSING ##
+    kwargs = default_args(x, **kwargs)
+    for k,v in kwargs.iteritems():
+        next = kwargs[k]
+        eval(k + ' = next')
+    import matplotlib.pyplot as plt #needs to happen after loading defaults
 
-    if 'colors' in kwargs:
-        kwargs['color'] = kwargs['colors']
-        del kwargs['colors']
-
-    if 'linestyles' in kwargs:
-        kwargs['linestyle'] = kwargs['linestyles']
-        del kwargs['linestyles']
-
-    if 'markers' in kwargs:
-        kwargs['marker'] = kwargs['markers']
-        del kwargs['markers']
-
-    if 'normalize' in kwargs:
-        normalize = kwargs['normalize']
+    if kwargs['normalize']:
         x = normalizer(x, normalize=normalize, internal=True)
-        del kwargs['normalize']
     else:
         x = normalizer(x, normalize=False, internal=True)
 
@@ -194,32 +184,9 @@ def plot(x,*args,**kwargs):
         # interpolate lines if they are grouped
         if all([symbol not in args for symbol in Line2D.markers.keys()]):
             x = patch_lines(x)
-
-    if 'style' in kwargs:
-        sns.set(style=kwargs['style'])
-        del kwargs['style']
+    kwargs = remove_hyper_args(x, **kwargs)
+    
+    if kwargs['animate']
+        return animate(x, *args, **kwargs)
     else:
-        sns.set(style="whitegrid")
-
-    if 'palette' in kwargs:
-        sns.set_palette(palette=kwargs['palette'], n_colors=len(x))
-        palette = sns.color_palette(palette=kwargs['palette'], n_colors=len(x))
-        del kwargs['palette']
-    else:
-        sns.set_palette(palette="hls", n_colors=len(x))
-        palette=sns.color_palette(palette="hls", n_colors=len(x))
-
-    if 'animate' in kwargs:
-        animate=kwargs['animate']
-        del kwargs['animate']
-
-        # if animate mode, pass the color palette via kwargs so we can build a legend
-        kwargs['color_palette']=palette
-
-    else:
-        animate=False
-
-    if animate:
-        return animated_plot(x,*args,**kwargs)
-    else:
-        return static_plot(x,*args,**kwargs)
+        return static(x, *args, **kwargs)

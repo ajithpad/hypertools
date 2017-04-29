@@ -13,6 +13,7 @@ from scipy.interpolate import PchipInterpolator as pchip
 import seaborn as sns
 import itertools
 import pandas as pd
+import matplotlib
 
 ##HELPER FUNCTIONS##
 def center(x):
@@ -132,8 +133,60 @@ def reshape_data(x,labels):
 		x_reshaped[categories.index(point)].append(x_stacked[idx])
 	return [np.vstack(i) for i in x_reshaped]
 
-def format_data(x):
+def parse_equivalent_args(**kwargs):
+	plurals = {'colors': 'color',
+			   'linestyles': 'linestyle',
+			   'markers': 'marker'}
+	for k,v in plurals.iteritems():
+		if k in kwargs:
+			kwargs[k] = v
+			del kwargs[v]
+	return kwargs
 
+def default_args(x, **kwargs):
+	kwargs = parse_equivalent_args(kwargs)
+
+	defaults = {'normalize': False,
+			'ndims': np.min([3, x[0].shape[1]]),
+			'style': 'whitegrid',
+			'palette': 'hls',
+			'n_colors': len(x),
+			'animate': False,
+			'zoom': 0,
+			'chemtrails': False,
+			'rotations': 2,
+			'duration': 30,
+			'frame_rate': 50,
+			'tail_duration': 2,
+			'return_data': False,
+			'save': False,
+			'show': True,
+			'legend': False}
+
+	for d in defaults.keys():
+		if not (d in kwargs):
+			kwargs[d] = defaults[d]
+
+	if 'save_path' in kwargs:
+		kwargs['save'] = True
+	else:
+		kwargs['save_path'] = '' #ensures this argument will be removed later
+
+	if kwargs['show']:
+		matplotlib.use('Agg')
+
+	sns.set_palette(palette=kwargs['palette'], n_colors=len(x))
+
+	return kwargs
+
+def remove_hyper_args(x, **kwargs):
+	defaults = default_args(x, **kargs)
+	for d in defaults.keys():
+		if d in kwargs:
+			del kwargs[d]
+	return kwargs
+
+def format_data(x):
 	# not sure why i needed to import here, but its the only way I could get it to work
 	from ..tools.df2mat import df2mat
 
