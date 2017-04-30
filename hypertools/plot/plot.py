@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 ##PACKAGES##
-from __future__ import division
+from __future__ import division, absolute_import, print_function, unicode_literals
+import six
 import sys
 import warnings
 import re
@@ -129,10 +130,9 @@ def plot(x,*args,**kwargs):
 
     ## HYPERTOOLS-SPECIFIC ARG PARSING ##
     kwargs = default_args(x, **kwargs)
-    for k,v in kwargs.iteritems():
+    for k,v in six.iteritems(kwargs):
         next = kwargs[k]
-        eval(k + ' = next')
-    import matplotlib.pyplot as plt #needs to happen after loading defaults
+        exec k + ' = next' in locals()
 
     if kwargs['normalize']:
         x = normalizer(x, normalize=normalize, internal=True)

@@ -9,3 +9,6 @@ dist/
 .tox/
 *.bak
 tox.ini
+\.idea/preferred-vcs\.xml
+
+\.idea/hypertools\.iml

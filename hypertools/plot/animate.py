@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ##PACKAGES##
-from __future__ import division
+from __future__ import division, absolute_import, print_function, unicode_literals
 from builtins import zip
 import numpy as np
 import matplotlib
@@ -9,6 +9,7 @@ import mpl_toolkits.mplot3d.axes3d as p3
 import matplotlib.animation as animation
 from .._shared.helpers import *
 from ..tools.reduce import reduce as reduceD
+import six
 
 ##MAIN FUNCTION##
 def animated_plot(x, *args, **kwargs):
@@ -28,9 +29,9 @@ def animated_plot(x, *args, **kwargs):
 
     ## HYPERTOOLS-SPECIFIC ARG PARSING ##
     kwargs = default_args(x, **kwargs)
-    for k,v in kwargs.iteritems():
+    for k,v in six.iteritems(kwargs):
         next = kwargs[k]
-        eval(k + ' = next')
+        exec k + ' = next' in locals()
     import matplotlib.pyplot as plt #needs to happen after loading defaults
     kwargs = remove_hyper_args(x, **kwargs)
 
